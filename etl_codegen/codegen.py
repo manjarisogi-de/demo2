@@ -1,8 +1,8 @@
 from typing import Dict
 
 def generate_pyspark_code(schema: Dict[str, str],
-                          input_path: str = "s3://your-bucket/input/",
-                          output_path: str = "s3://your-bucket/output/") -> str:
+                          input_path: str = "<input_path>",
+                          output_path: str = "<output_path>") -> str:
     """
     schema: {column_name: spark_type}
     """
@@ -14,25 +14,29 @@ def generate_pyspark_code(schema: Dict[str, str],
     lines.append("")
     lines.append(f'df_raw = spark.read.json("{input_path}")')
     lines.append("")
-    lines.append("# Select & cast columns")
+
+    # Select / cast block
+    lines.append("df = df_raw.select(")
+
     select_exprs = []
     for col_name, col_type in schema.items():
-        if col_type == "string":
-            select_exprs.append(f'col("{col_name}").alias("{col_name.replace(".", "_")}")')
+        alias = col_name.replace(".", "_")
+        if col_type in ("int", "double"):
+            select_exprs.append(f'    col("{col_name}").cast("{col_type}").alias("{alias}")')
         else:
-            select_exprs.append(
-                f'col("{col_name}").cast("{col_type}").alias("{col_name.replace(".", "_")}")'
-            )
+            select_exprs.append(f'    col("{col_name}").alias("{alias}")')
 
-        lines.append("df = df_raw.select(")
+    # Add lines with commas
     for i, expr in enumerate(select_exprs):
         comma = "," if i < len(select_exprs) - 1 else ""
-        lines.append(f"    {expr}{comma}")
-    lines.append(")")
+        lines.append(expr + comma)
 
-   
+    lines.append(")")
     lines.append("")
-    lines.append('# Write curated data')
-    lines.append('df.write.mode("overwrite").parquet("<output_path>")')
+
+    # Output path
+    lines.append(f'df.write.mode("overwrite").parquet("{output_path}")')
     lines.append("")
     lines.append("spark.stop()")
+
+    return "\n".join(lines)
