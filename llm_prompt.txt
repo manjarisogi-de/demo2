@@ -1,0 +1,72 @@
+
+You are an expert Data Engineer. Below is everything you need to refine and improve an ETL pipeline.
+
+=== 1. Inferred Flattened Schema ===
+{
+  "request_id": "string",
+  "user.id": "string",
+  "user.segment": "string",
+  "event.type": "string",
+  "event.ts": "string",
+  "amount": "double"
+}
+
+=== 2. Draft PySpark ETL Code (Auto-Generated) ===
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
+
+spark = SparkSession.builder.appName('etl_codegen').getOrCreate()
+
+df_raw = spark.read.json("s3://your-bucket/input/")
+
+# Select & cast columns
+df = df_raw.select(
+    col("request_id").alias("request_id"),
+    col("user.id").alias("user_id"),
+    col("user.segment").alias("user_segment"),
+    col("event.type").alias("event_type"),
+    col("event.ts").alias("event_ts"),
+    col("amount").cast("double").alias("amount")
+)
+
+# TODO: add derived columns, DQ checks, etc.
+df.write.mode("overwrite").parquet("s3://your-bucket/output/")
+
+spark.stop()
+
+=== 3. Sample Flattened Row ===
+{
+  "request_id": "abc123",
+  "user.id": "u1",
+  "user.segment": "test",
+  "event.type": "click",
+  "event.ts": "2025-01-25T10:00:00Z",
+  "amount": 19.99
+}
+
+=== 4. Suggested Data Quality Checks ===
+- `request_id` should not be null
+- `user_id` should not be null
+- `event_ts` should be a valid timestamp
+- `amount` should not be negative
+
+=== 5. schema_output.json ===
+{
+  "request_id": "string",
+  "user.id": "string",
+  "user.segment": "string",
+  "event.type": "string",
+  "event.ts": "string",
+  "amount": "double"
+}
+
+Your task:
+- Improve and productionize the ETL pipeline
+- Handle arrays (explode)
+- Normalize timestamps
+- Apply DQ checks
+- Add comments and best practices
+- Suggest partitioning strategy
+- Optimize for Spark + Glue performance
+
+Return a clean, production-ready PySpark ETL script.

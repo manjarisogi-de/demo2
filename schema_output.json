@@ -1,0 +1,8 @@
+{
+  "request_id": "string",
+  "user.id": "string",
+  "user.segment": "string",
+  "event.type": "string",
+  "event.ts": "string",
+  "amount": "double"
+}
