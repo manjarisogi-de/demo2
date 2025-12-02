@@ -24,15 +24,15 @@ def generate_pyspark_code(schema: Dict[str, str],
                 f'col("{col_name}").cast("{col_type}").alias("{col_name.replace(".", "_")}")'
             )
 
-    lines.append("df = df_raw.select(")
+        lines.append("df = df_raw.select(")
     for i, expr in enumerate(select_exprs):
         comma = "," if i < len(select_exprs) - 1 else ""
         lines.append(f"    {expr}{comma}")
     lines.append(")")
+
+   
     lines.append("")
-    lines.append("# TODO: add derived columns, DQ checks, etc.")
-    lines.append(f'df.write.mode("overwrite").parquet("{output_path}")')
+    lines.append('# Write curated data')
+    lines.append('df.write.mode("overwrite").parquet("<output_path>")')
     lines.append("")
     lines.append("spark.stop()")
-
-    return "\n".join(lines)

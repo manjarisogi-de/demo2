@@ -12,35 +12,32 @@ def generate_llm_prompt(schema, flat_sample, dq_suggestions, generated_code):
     dq_text = "\n".join(dq_suggestions)
 
     prompt = f"""
-You are an expert Data Engineer. Below is everything you need to refine and improve an ETL pipeline.
+You are an expert Data Engineer. Improve and productionize the PySpark ETL code below.
 
-=== 1. Inferred Flattened Schema ===
+The ETL must:
+- handle nested fields correctly
+- normalize timestamps
+- handle arrays using explode (if applicable)
+- apply light data quality checks
+- include clear comments
+- write clean, maintainable, production-ready code
+
+=== Inferred Schema ===
 {schema_json}
 
-=== 2. Draft PySpark ETL Code (Auto-Generated) ===
+=== Draft ETL Code ===
 {generated_code}
 
-=== 3. Sample Flattened Row ===
+=== Sample Flattened Row ===
 {flat_sample_json}
 
-=== 4. Suggested Data Quality Checks ===
+=== Suggested Data Quality Checks ===
 {dq_text}
 
-=== 5. schema_output.json ===
-{schema_json}
-
-Your task:
-- Improve and productionize the ETL pipeline
-- Handle arrays (explode)
-- Normalize timestamps
-- Apply DQ checks
-- Add comments and best practices
-- Suggest partitioning strategy
-- Optimize for Spark + Glue performance
-
-Return a clean, production-ready PySpark ETL script.
+Return only the final improved PySpark ETL script.
 """
     return prompt
+
 
 
 def main():

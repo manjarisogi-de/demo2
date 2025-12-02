@@ -1,0 +1,23 @@
+{
+  "session_id": "sess-445",
+  "user": {
+    "id": "customer-1",
+    "membership": {
+      "tier": "gold",
+      "renewal_date": "2025-12-30"
+    }
+  },
+  "request": {
+    "type": "voice_command",
+    "utterance": "show me my porch camera",
+    "asr": {
+      "confidence": 0.83,
+      "language": "en-US"
+    }
+  },
+  "metadata": {
+    "device_id": "dev-445",
+    "device_type": "echo_show",
+    "ip": "10.1.2.3"
+  }
+}
