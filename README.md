@@ -31,7 +31,7 @@ Given a sample JSON, It produces:
 
 The LLM prompt contains everything an AI agent needs to refine the ETL into a production-ready script.
 
-## 🏗 Architecture (AI-First Engineering)
+##  Architecture (AI-First Engineering)
 
 ```mermaid
 flowchart LR
@@ -49,3 +49,23 @@ flowchart LR
         E --> L4[Lambda]
     end
 ```
+### 🔹 AI Refinement Using Amazon Bedrock (Llama 3 Instruct)
+
+This project integrates with **Amazon Bedrock (meta.llama3-70b-instruct-v1:0)**  
+to refine the auto-generated ETL code.
+
+Llama 3 Instruct is available immediately (no model approval required),
+so the AI refinement step works end-to-end.
+
+Refinement process:
+1. Draft ETL is generated locally
+2. A structured prompt is created
+3. Prompt is sent to Bedrock using boto3
+4. Llama 3 Instruct returns a production-ready PySpark ETL script
+5. Output is written to `refined_etl.py`
+
+This demonstrates:
+- GenAI-enhanced development
+- Prompt engineering
+- Agent‐style multi-step workflows
+- AWS-native AI integration
