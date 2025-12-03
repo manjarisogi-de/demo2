@@ -7,8 +7,18 @@ This project is an **data engineering tool** that:
 - produces suggested data quality checks,
 - writes structured metadata outputs,
 - and creates a fully structured **LLM-ready prompt** for further ETL refinement.
+- refines the ETL using **Amazon Bedrock (Llama 3)**,
+- and outputs production-style ETL code into `refined_etl.py`.
 
 It demonstrates how  prompt engineering can accelerate ETL development and onboarding new datasets.
+
+---
+## Features
+- **Schema inference** for nested JSON + arrays  
+- **Draft ETL generation** using deterministic rules  
+- **LLM-refined ETL** with clean, production-ready PySpark  
+- **Array explode support** for array-of-struct fields  
+- **Agent workflow simulation** (`agent_demo.py`)
 
 ---
 
@@ -28,6 +38,7 @@ Given a sample JSON, It produces:
 ### ✔ 4. Suggested Data Quality (DQ) checks  
 ### ✔ 5. schema_output.json  
 ### ✔ 6. LLM-Ready Prompt (llm_prompt.txt)
+### ✔ 7. Generates production-style ETL code into `refined_etl.py`
 
 The LLM prompt contains everything an AI agent needs to refine the ETL into a production-ready script.
 
@@ -41,12 +52,6 @@ flowchart LR
     D --> E[LLM Prompt Generator]
     E --> F[LLM or AI Agent<br/>ChatGPT / Amazon Q / Bedrock]
     F --> G[Refined, Production ETL Script]
-
-    subgraph Optional AWS Deployment
-        B --> L1[Lambda]
-        C --> L2[Lambda]
-        D --> L3[Lambda or Fargate]
-        E --> L4[Lambda]
     end
 ```
 ### 🔹 AI Refinement Using Amazon Bedrock (Llama 3 Instruct)
@@ -64,8 +69,4 @@ Refinement process:
 4. Llama 3 Instruct returns a production-ready PySpark ETL script
 5. Output is written to `refined_etl.py`
 
-This demonstrates:
-- GenAI-enhanced development
-- Prompt engineering
-- Agent‐style multi-step workflows
-- AWS-native AI integration
+

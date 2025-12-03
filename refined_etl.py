@@ -1,21 +1,22 @@
-```
-from pyspark.sql.functions import col, explode, to_timestamp
-from pyspark.sql.types import DoubleType
+from pyspark.sql import functions as F
 
-# Load the data
-df = spark.read.json("path/to/data.json")
+df = spark.read.json('input.json')
 
-# Normalize timestamps
-df = df.withColumn("event.ts", to_timestamp(col("event.ts"), "yyyy-MM-dd'T'HH:mm:ss'Z'"))
+df = df.select(
+    F.col('request_id'),
+    F.col('user.id').alias('user_id'),
+    F.col('user.segment').alias('user_segment'),
+    F.col('event.type').alias('event_type'),
+    F.to_timestamp(F.col('event.ts'), 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'').alias('event_ts'),
+    F.col('amount').cast('double')
+)
 
-# Explode arrays (if applicable)
-# None in this case
+df = df.filter(
+    F.col('request_id').isNotNull(),
+    F.col('user_id').isNotNull(),
+    F.col('event_type').isNotNull(),
+    F.col('event_ts').isNotNull(),
+    F.col('amount').isNotNull()
+)
 
-# Apply data quality checks
-df = df.filter(col("request_id").isNotNull() & col("user.id").isNotNull() & col("event.type").isNotNull())
-df = df.filter(col("amount").cast(DoubleType()).isNaN() == False)
-
-# Final ETL script
-df.write.parquet("path/to/output.parquet", mode="overwrite")
-```
-Note: The above code assumes that the input data is in a JSON file. You may need to adjust the `spark.read.json` line to match your actual data source.
+df.write.parquet('output.parquet', mode='overwrite', compression='snappy')
