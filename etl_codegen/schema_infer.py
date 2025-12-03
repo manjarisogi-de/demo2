@@ -8,49 +8,53 @@ def infer_type(value: Any) -> str:
         return "int"
     if isinstance(value, float):
         return "double"
-    # naive check for timestamp-ish strings could be added later
     return "string"
 
-def flatten_record(record, prefix=""):
+
+def infer_schema(obj: Dict[str, Any], prefix: str = "") -> Dict[str, str]:
+    schema = {}
+
+    for k, v in obj.items():
+        col_name = f"{prefix}{k}" if prefix == "" else f"{prefix}.{k}"
+
+        # Struct
+        if isinstance(v, dict):
+            nested = infer_schema(v, prefix=col_name)
+            schema.update(nested)
+
+        # Array detection
+        elif isinstance(v, list):
+            if len(v) > 0:
+                if isinstance(v[0], dict):
+                    schema[col_name] = "array_of_struct"
+                else:
+                    schema[col_name] = "array"
+            else:
+                schema[col_name] = "array"
+
+        # Primitive
+        else:
+            schema[col_name] = infer_type(v)
+
+    return schema
+
+
+def infer_schema_from_samples(records):
+    return infer_schema(records[0])
+
+
+def flatten_record(record: Dict[str, Any], prefix: str = "") -> Dict[str, Any]:
     flat = {}
     for k, v in record.items():
         col_name = f"{prefix}{k}" if prefix == "" else f"{prefix}.{k}"
 
-        # If nested dict → flatten it recursively
         if isinstance(v, dict):
-            nested = flatten_record(v, prefix=col_name)
-            flat.update(nested)
+            flat.update(flatten_record(v, prefix=col_name))
 
-        # If list → KEEP THE RAW VALUE (we will rely on explode later)
         elif isinstance(v, list):
-            flat[col_name] = v  # don't replace with types
+            flat[col_name] = v  # keep full list as preview
 
         else:
-            # KEEP THE RAW VALUE (NOT infer_type)
             flat[col_name] = v
 
     return flat
-
-
-def infer_schema_from_samples(records):
-    # Infer schema based on first record only
-    record = records[0]
-    return infer_schema(record)
-
-
-def infer_schema(obj, prefix=""):
-    schema = {}
-    for k, v in obj.items():
-        col_name = f"{prefix}{k}" if prefix == "" else f"{prefix}.{k}"
-        if isinstance(v, dict):
-            nested = infer_schema(v, prefix=col_name)
-            schema.update(nested)
-        elif isinstance(v, list):
-            # simple assumption: array of objects or primitives
-            if len(v) > 0 and isinstance(v[0], dict):
-                schema[col_name] = "array_of_struct"
-            else:
-                schema[col_name] = "array"
-        else:
-            schema[col_name] = infer_type(v)
-    return schema

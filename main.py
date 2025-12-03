@@ -6,52 +6,53 @@ from etl_codegen.schema_infer import infer_schema_from_samples, flatten_record
 from etl_codegen.codegen import generate_pyspark_code
 
 
-def generate_llm_prompt(schema, flat_sample, dq_suggestions, generated_code):
-    schema_json = json.dumps(schema, indent=2)
-    flat_sample_json = json.dumps(flat_sample, indent=2)
-    dq_text = "\n".join(dq_suggestions)
+def detect_array_columns(schema):
+    # Return only array-of-struct columns ("events", etc.)
+    return [col for col, t in schema.items() if t == "array_of_struct"]
+
+
+def generate_llm_prompt(schema, flat_sample, dq_suggestions, generated_code, array_cols):
+    schema_lines = []
+    for col, typ in schema.items():
+        schema_lines.append(f"- {col}: {typ}")
+    schema_text = "\n".join(schema_lines)
+
+    array_info = ", ".join(array_cols) if array_cols else "None"
 
     prompt = f"""
-You are an expert Data Engineer. Improve and productionize the PySpark ETL code below.
+Generate a complete PySpark ETL script from scratch based on the schema below.
 
-The ETL must:
-- handle nested fields correctly
-- normalize timestamps
-- handle arrays using explode (if applicable)
-- apply light data quality checks
-- include clear comments
-- write clean, maintainable, production-ready code
+Requirements:
+- Use clean, production-quality PySpark
+- Use col() for all column references
+- Use alias() to flatten nested fields
+- Normalize timestamps using to_timestamp()
+- Explode ONLY these array-of-struct fields (if present): {array_info}
+- Cast numeric fields to correct types
+- Apply simple non-null filters
+- Write Parquet with overwrite mode and snappy compression
+- No placeholder column names
+- No invented fields
 
-=== Inferred Schema ===
-{schema_json}
+Schema:
+{schema_text}
 
-=== Draft ETL Code ===
-{generated_code}
-
-=== Sample Flattened Row ===
-{flat_sample_json}
-
-=== Suggested Data Quality Checks ===
-{dq_text}
-
-Return only the final improved PySpark ETL script.
+Output only the PySpark code. Do not repeat the instructions.
+Begin your answer with 'from pyspark.sql'.
 """
-    return prompt
-
+    return prompt.strip()
 
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python main.py <path_to_json>")
+        print("Usage: python main.py <json_path>")
         sys.exit(1)
 
     sample_path = sys.argv[1]
-
     if not os.path.exists(sample_path):
         print(f"Error: File {sample_path} not found.")
         sys.exit(1)
 
-    # Read JSON sample
     with open(sample_path, "r") as f:
         content = f.read().strip()
         if content.startswith("["):
@@ -59,23 +60,10 @@ def main():
         else:
             records = [json.loads(content)]
 
-    # Infer schema
     schema = infer_schema_from_samples(records)
-    print("\n# Inferred schema:")
-    for k, v in schema.items():
-        print(f"#   {k}: {v}")
-
-    # Save schema
-    with open("schema_output.json", "w") as f:
-        json.dump(schema, f, indent=2)
-    print("\nSchema written to schema_output.json")
-
-    # Flatten sample correctly
     flat_sample = flatten_record(records[0])
-    print("\n# Sample Flattened Row (sanity check):")
-    print(json.dumps(flat_sample, indent=2))
+    array_cols = detect_array_columns(schema)
 
-    # Build DQ suggestions
     dq_suggestions = []
     for col_name, col_type in schema.items():
         clean = col_name.replace(".", "_")
@@ -86,20 +74,14 @@ def main():
         if col_type in ("int", "double"):
             dq_suggestions.append(f"- `{clean}` should not be negative")
 
-    print("\n# Suggested Data Quality Checks:")
-    for d in dq_suggestions:
-        print(d)
-
-    # Generate ETL code
     generated_code = generate_pyspark_code(schema)
-    print("\n# Generated PySpark ETL Code:")
-    print(generated_code)
 
-    # FINAL: Generate LLM Prompt
-    llm_prompt = generate_llm_prompt(schema, flat_sample, dq_suggestions, generated_code)
+    llm_prompt = generate_llm_prompt(schema, flat_sample, dq_suggestions, generated_code, array_cols)
+
     with open("llm_prompt.txt", "w") as f:
         f.write(llm_prompt)
-    print("\nllm_prompt.txt created successfully")
+
+    print("llm_prompt.txt generated successfully")
 
 
 if __name__ == "__main__":
