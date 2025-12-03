@@ -1,38 +1,24 @@
+Generate a complete PySpark ETL script from scratch based on the schema below.
 
-You are an expert Data Engineer. Improve and productionize the PySpark ETL code below.
+Requirements:
+- Use clean, production-quality PySpark
+- Use col() for all column references
+- Use alias() to flatten nested fields
+- Normalize timestamps using to_timestamp()
+- Explode ONLY these array-of-struct fields (if present): None
+- Cast numeric fields to correct types
+- Apply simple non-null filters
+- Write Parquet with overwrite mode and snappy compression
+- No placeholder column names
+- No invented fields
 
-The ETL must:
-- handle nested fields correctly
-- normalize timestamps
-- handle arrays using explode (if applicable)
-- apply light data quality checks
-- include clear comments
-- write clean, maintainable, production-ready code
+Schema:
+- request_id: string
+- user.id: string
+- user.segment: string
+- event.type: string
+- event.ts: string
+- amount: double
 
-=== Inferred Schema ===
-{
-  "request_id": "string",
-  "user.id": "string",
-  "user.segment": "string",
-  "event.type": "string",
-  "event.ts": "string",
-  "amount": "double"
-}
-
-=== Draft ETL Code ===
-None
-
-=== Sample Flattened Row ===
-{
-  "request_id": "abc123",
-  "user.id": "u1",
-  "user.segment": "test",
-  "event.type": "click",
-  "event.ts": "2025-01-25T10:00:00Z",
-  "amount": 19.99
-}
-
-=== Suggested Data Quality Checks ===
-
-
-Return only the final improved PySpark ETL script.
+Output only the PySpark code. Do not repeat the instructions.
+Begin your answer with 'from pyspark.sql'.
