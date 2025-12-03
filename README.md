@@ -47,7 +47,6 @@ flowchart LR
         C --> L2[Lambda]
         D --> L3[Lambda or Fargate]
         E --> L4[Lambda]
-    end
 ```
 ### 🔹 AI Refinement Using Amazon Bedrock (Llama 3 Instruct)
 
